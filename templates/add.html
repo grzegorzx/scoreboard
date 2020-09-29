@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Add activity
+{% endblock %}
+
+{% block content %}
+
+{% if message %}
+    {{ message }}
+{% endif %}
+
+<h1>Add new session:</h1>
+
+{% if form %}
+<form action="{{url_for('add')}}" method="POST" style="padding:5px;">
+    <!-- Name Field -->
+    {{ form.name.label }}:
+    {{ form.name }}
+    <br>
+    {% if form.name.errors %}
+        {% for error in form.name.errors %}
+        <b style="color:red;"> {{ error }} </b> 
+        <br>
+        {% endfor %}
+    {% endif %}
+    <br>
+    <!-- Score Field -->
+    {{ form.score.label }}:
+    {{ form.score }}
+    <br>
+    {% if form.score.errors %}
+        {% for error in form.score.errors %}
+        <b style="color:red;"> {{ error }} </b> 
+        <br>
+        {% endfor %}
+    {% endif %}
+    <br>
+    Game Field
+    {{ form.game.label }}: 
+    <br>
+    {% for subfield in form.game %}
+    <tr>
+        <td>{{ subfield }}</td>
+        <td>{{ subfield.label }}</td>
+    </tr>
+    <br>
+    {% if form.game.errors %}
+        {% for error in form.game.errors %}
+        <b style="color:red;"> {{ error }} </b> 
+        <br>
+        {% endfor %} 
+    {% endif %}
+    {% endfor %}
+    <br>
+    <!-- Submit Field -->
+    {{ form.csrf_token }}
+    {{ form.submit }}
+</form>
+{% endif %}
+{% endblock %}
