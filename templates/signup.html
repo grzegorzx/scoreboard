@@ -44,8 +44,10 @@ Signup
             {% endfor %}
         </ul>
     {% endif %}
-    {{ form.confirm_password. label }}
+    <br>
+    {{ form.confirm_password.label }}: <br>
     {{ form.confirm_password }}
+    <br>
     <br>
     {{ form.csrf_token }}
     {{ form.submit }}

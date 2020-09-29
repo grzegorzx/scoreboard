@@ -15,7 +15,6 @@ Login
     {{ form.email.label }}: <br>
     {{ form.email }}
     {% if form.email.errors %}
-    <br>
         <ul>
             {% for error in form.email.errors %}
             <li id="error">{{ error }}</li>
@@ -33,8 +32,7 @@ Login
             {% endfor %}
         </ul>
     {% endif %}
-    {{ form.confirm_password. label }}
-    {{ form.confirm_password }}
+    <br>
     <br>
     {{ form.csrf_token }}
     {{ form.submit }}

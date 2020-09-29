@@ -1,11 +1,13 @@
 from flask import Flask, render_template, request, session, redirect, url_for
 from forms import LoginForm, ScoreForm, SignupForm
+from flask_sqlalchemy import SQLAlchemy
 import os
 
 app = Flask(__name__)
-
 SECRET_KEY = os.urandom(32)
 app.config['SECRET_KEY'] = SECRET_KEY
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///scoreboard.db'
+db = SQLAlchemy(app)
 
 users = [
     {"id": 1, "name": "Minyao", "email":"m@h.cn", "password":"mh1337"}
@@ -16,6 +18,25 @@ records = [
     {"id": 2, "name": "Grzegorz", "score": 9, "game": "Golf Story"},
     {"id": 3, "name": "Grzegorz", "score": 9, "game": "Golf Story"}
 ]
+
+class User(db.Model):
+    user_id = db.Column(db.Integer, primary_key=True, nullable=False)
+    name = db.Column(db.String, nullable=False)
+    email = db.Column(db.String, unique=True, nullable=False)
+    password = db.Column(db.String, nullable=False)
+    records = db.relationship('Record', backref='user')
+
+class Game(db.Model):
+    game_id = db.Column(db.Integer, primary_key=True, nullable=False)
+    title = db.Column(db.String, nullable=False, unique=True)
+    records = db.relationship('Record', backref='game')
+
+class Record(db.Model):
+    record_id = db.Column(db.String, primary_key=True, nullable=False)
+    game_title = db.Column(db.String, db.ForeignKey('game.title'), nullable = False)
+    user = db.Column(db.String, db.ForeignKey('user.user_id'), nullable=False)
+
+db.create_all()
 
 @app.route("/")
 def home():
