@@ -24,7 +24,7 @@ class User(db.Model):
     name = db.Column(db.String, nullable=False)
     email = db.Column(db.String, unique=True, nullable=False)
     password = db.Column(db.String, nullable=False)
-    records = db.relationship('Record', backref='user')
+    records = db.relationship('Record', backref='user', uselist=False)
 
 class Game(db.Model):
     game_id = db.Column(db.Integer, primary_key=True, nullable=False)
