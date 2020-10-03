@@ -37,21 +37,16 @@ Add activity
     {% endif %}
     <br>
     Game Field
-    {{ form.game.label }}: 
+    {{ form.game.label }}:
     <br>
-    {% for subfield in form.game %}
-    <tr>
-        <td>{{ subfield }}</td>
-        <td>{{ subfield.label }}</td>
-    </tr>
-    <br>
+    {{ form.game}}
     {% if form.game.errors %}
         {% for error in form.game.errors %}
         <b style="color:red;"> {{ error }} </b> 
         <br>
         {% endfor %} 
     {% endif %}
-    {% endfor %}
+    <br>
     <br>
     <!-- Submit Field -->
     {{ form.csrf_token }}

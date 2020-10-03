@@ -1,7 +1,11 @@
 from flask import Flask, render_template, request, session, redirect, url_for
-from forms import LoginForm, ScoreForm, SignupForm
+from forms import LoginForm, SignupForm
 from flask_sqlalchemy import SQLAlchemy
 import os
+from flask_wtf import FlaskForm
+from wtforms import StringField, PasswordField, SubmitField, IntegerField, RadioField
+from wtforms.validators import InputRequired, Email, EqualTo
+from wtforms.ext.sqlalchemy.fields import QuerySelectField
 
 app = Flask(__name__)
 SECRET_KEY = os.urandom(32)
@@ -10,16 +14,6 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///scoreboard.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['FLASK_ENV']='development'
 db = SQLAlchemy(app)
-
-users = [
-    {"id": 1, "name": "Minyao", "email":"m@h.cn", "password":"mh1337"}
-]
-
-# records = [
-#     {"id": 1, "name": "Grzegorz", "score": 9, "game": "Golf Story"},
-#     {"id": 2, "name": "Grzegorz", "score": 9, "game": "Golf Story"},
-#     {"id": 3, "name": "Grzegorz", "score": 9, "game": "Golf Story"}
-# ]
 
 class User(db.Model):
     user_id = db.Column(db.Integer, primary_key=True, nullable=False)
@@ -34,11 +28,35 @@ class Game(db.Model):
     records = db.relationship('Record', backref='game')
 
 class Record(db.Model):
-    record_id = db.Column(db.String, primary_key=True, nullable=False)
+    record_id = db.Column(db.Integer, primary_key=True, nullable=False)
     game_title = db.Column(db.String, db.ForeignKey('game.title'), nullable = False)
     winner = db.Column(db.String, db.ForeignKey('user.user_id'), nullable=False)
+    score = db.Column(db.Integer, nullable=False)
 
 db.create_all()
+
+def games_query():
+    games_list = []
+    for g in Game.query:
+        games_list.append(g.title)
+        print(g.title)
+        print(games_list)
+    return games_list
+
+class ScoreForm(FlaskForm):
+    name = StringField('Name', validators=[InputRequired()])
+    score = IntegerField('Score', validators=[InputRequired()])
+    # game = RadioField('Game', validators=[InputRequired()], choices=games)
+    game = QuerySelectField('Game', query_factory=games_query)
+    submit = SubmitField('Submit')
+
+@app.route('/test')
+def test():
+    liss = []
+    for g in db.session.query(Game.title):
+        liss.append(g)
+    print(liss)
+    return render_template('home.html')
 
 @app.route("/")
 def home():
@@ -78,18 +96,18 @@ def signup():
 def add():
     form = ScoreForm()
     if form.validate_on_submit():
-        new_record = {"id": len(records)+1, "name": form.name.data, "score": form.score.data, "game": form.game.data}
-        records.append(new_record)
-        # new_record = Record(id = (User.query.count())+1, name = form.name.data, score = form.score.data, game = form.game.data)
-        # db.session.add(new_record)
-        # try:
-        #     db.session.commit()
-        # except Exception as e:
-        #     print(e)
-        #     db.session.rollback()
-        #     return render_template("add.html", form=form, message="Something went wrong.")
-        # finally:
-        #     db.session.close()
+        # new_record = {"id": len(records)+1, "name": form.name.data, "score": form.score.data, "game": form.game.data}
+        # records.append(new_record)
+        new_record = Record(record_id = (User.query.count())+1, game_title = form.game.data, winner = form.name.data, score = int(form.score.data))
+        db.session.add(new_record)
+        try:
+            db.session.commit()
+        except Exception as e:
+            print(e)
+            db.session.rollback()
+            return render_template("add.html", form=form, message="Something went wrong.")
+        finally:
+            db.session.close()
         return render_template("add.html", message="Successfully added a record.")
     return render_template("add.html", form=form)
 
