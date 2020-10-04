@@ -16,46 +16,40 @@ app.config['FLASK_ENV']='development'
 db = SQLAlchemy(app)
 
 class User(db.Model):
-    user_id = db.Column(db.Integer, primary_key=True, nullable=False)
-    name = db.Column(db.String, nullable=False)
+    user_id = db.Column(db.Integer, nullable=False)
+    name = db.Column(db.String, primary_key=True, nullable=False)
     email = db.Column(db.String, unique=True, nullable=False)
     password = db.Column(db.String, nullable=False)
     records = db.relationship('Record', backref='user')
 
 class Game(db.Model):
-    game_id = db.Column(db.Integer, primary_key=True, nullable=False)
-    title = db.Column(db.String, nullable=False, unique=True)
+    game_id = db.Column(db.Integer, nullable=False)
+    title = db.Column(db.String, primary_key=True, nullable=False, unique=True)
     records = db.relationship('Record', backref='game')
 
 class Record(db.Model):
     record_id = db.Column(db.Integer, primary_key=True, nullable=False)
     game_title = db.Column(db.String, db.ForeignKey('game.title'), nullable = False)
-    winner = db.Column(db.String, db.ForeignKey('user.user_id'), nullable=False)
+    winner = db.Column(db.String, db.ForeignKey('user.name'), nullable=False)
     score = db.Column(db.Integer, nullable=False)
 
 db.create_all()
 
 def games_query():
-    games_list = []
-    for g in Game.query:
-        games_list.append(g.title)
-        print(g.title)
-        print(games_list)
-    return games_list
+    return db.session.query(Game)
 
 class ScoreForm(FlaskForm):
     name = StringField('Name', validators=[InputRequired()])
     score = IntegerField('Score', validators=[InputRequired()])
-    # game = RadioField('Game', validators=[InputRequired()], choices=games)
-    game = QuerySelectField('Game', query_factory=games_query)
+    game = QuerySelectField('Game', query_factory=games_query, get_label='title')
     submit = SubmitField('Submit')
 
 @app.route('/test')
 def test():
-    liss = []
-    for g in db.session.query(Game.title):
-        liss.append(g)
-    print(liss)
+    games = []
+    for row in Game.query:
+        games.append(row.title)
+    print(games)
     return render_template('home.html')
 
 @app.route("/")
@@ -66,7 +60,6 @@ def home():
 def login():
     form = LoginForm()
     if form.validate_on_submit():
-        # user = next((user for user in users if user["email"] == form.email.data and user["password"] == form.password.data), None)
         user = User.query.filter_by(email=form.email.data, password=form.password.data).first()
         if user is None:
             return render_template("login.html", form = form, message = "Wrong Credentials. Please Try Again.")
@@ -96,9 +89,7 @@ def signup():
 def add():
     form = ScoreForm()
     if form.validate_on_submit():
-        # new_record = {"id": len(records)+1, "name": form.name.data, "score": form.score.data, "game": form.game.data}
-        # records.append(new_record)
-        new_record = Record(record_id = (User.query.count())+1, game_title = form.game.data, winner = form.name.data, score = int(form.score.data))
+        new_record = Record(record_id = (Record.query.count())+1, game_title = form.game.data.title, winner = form.name.data, score = int(form.score.data))
         db.session.add(new_record)
         try:
             db.session.commit()
