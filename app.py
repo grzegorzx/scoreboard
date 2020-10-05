@@ -1,11 +1,12 @@
 from flask import Flask, render_template, request, session, redirect, url_for
-from forms import LoginForm, SignupForm
+from forms import LoginForm, SignupForm, GameForm
 from flask_sqlalchemy import SQLAlchemy
 import os
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField, IntegerField, RadioField
 from wtforms.validators import InputRequired, Email, EqualTo
 from wtforms.ext.sqlalchemy.fields import QuerySelectField
+import datetime
 
 app = Flask(__name__)
 SECRET_KEY = os.urandom(32)
@@ -32,29 +33,27 @@ class Record(db.Model):
     game_title = db.Column(db.String, db.ForeignKey('game.title'), nullable = False)
     winner = db.Column(db.String, db.ForeignKey('user.name'), nullable=False)
     score = db.Column(db.Integer, nullable=False)
+    timestamp = db.Column(db.DateTime, nullable=False, default=datetime.datetime.utcnow)
 
 db.create_all()
 
 def games_query():
     return db.session.query(Game)
 
-class ScoreForm(FlaskForm):
-    name = StringField('Name', validators=[InputRequired()])
-    score = IntegerField('Score', validators=[InputRequired()])
-    game = QuerySelectField('Game', query_factory=games_query, get_label='title')
-    submit = SubmitField('Submit')
+def users_query():
+    return db.session.query(User)
 
-@app.route('/test')
-def test():
-    games = []
-    for row in Game.query:
-        games.append(row.title)
-    print(games)
-    return render_template('home.html')
+class ScoreForm(FlaskForm):
+    name = QuerySelectField('Name', query_factory=users_query, get_label='name', validators=[InputRequired()])
+    score = IntegerField('Score', validators=[InputRequired()])
+    game = QuerySelectField('Game', query_factory=games_query, get_label='title', validators=[InputRequired()])
+    submit = SubmitField('Submit')
 
 @app.route("/")
 def home():
-    return render_template('home.html')
+    score_results = [u.__dict__ for u in Record.query]
+    print(score_results)
+    return render_template('home.html', score_results=score_results)
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -87,20 +86,43 @@ def signup():
 
 @app.route("/add", methods=["POST", "GET"])
 def add():
-    form = ScoreForm()
-    if form.validate_on_submit():
-        new_record = Record(record_id = (Record.query.count())+1, game_title = form.game.data.title, winner = form.name.data, score = int(form.score.data))
-        db.session.add(new_record)
-        try:
-            db.session.commit()
-        except Exception as e:
-            print(e)
-            db.session.rollback()
-            return render_template("add.html", form=form, message="Something went wrong.")
-        finally:
-            db.session.close()
-        return render_template("add.html", message="Successfully added a record.")
-    return render_template("add.html", form=form)
+    if 'user' not in session:
+        return render_template("home.html", message="You are not logged in.")
+    else:
+        form = ScoreForm()
+        if form.validate_on_submit():
+            new_record = Record(record_id = (Record.query.count())+1, game_title = form.game.data.title, winner = form.name.data.name, score = int(form.score.data))
+            db.session.add(new_record)
+            try:
+                db.session.commit()
+            except Exception as e:
+                print(e)
+                db.session.rollback()
+                return render_template("add.html", form=form, message="Something went wrong.")
+            finally:
+                db.session.close()
+            return render_template("add.html", message="Successfully added a record.")
+        return render_template("add.html", form=form)
+
+@app.route("/game", methods=["POST", "GET"])
+def game():
+    if 'user' not in session:
+        return render_template("home.html", message="You are not logged in.")
+    else:
+        form = GameForm()
+        if form.validate_on_submit():
+            new_game = Game(game_id=(Game.query.count())+1, title = form.game.data)
+            db.session.add(new_game)
+            try:
+                db.session.commit()
+            except Exception as e:
+                print(e)
+                db.session.rollback()
+                return render_template("game.html", form=form, message="Something went wrong.")
+            finally:
+                db.session.close()
+            return render_template("game.html", message="Successfully added a game.")
+        return render_template('game.html', form=form)
 
 @app.route("/logout")
 def logout():

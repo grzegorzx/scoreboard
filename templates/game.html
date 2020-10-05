@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Add game
+{% endblock %}
+
+{% block content %}
+
+{% if message %}
+    {{ message }}
+{% endif %}
+
+<h1>Add new game:</h1>
+
+{% if form %}
+<form action="{{url_for('game')}}" method="POST" style="padding:5px;">
+    <!-- Game Field -->
+    {{ form.game.label }}:
+    {{ form.game }}
+    <br>
+    {% if form.game.errors %}
+        {% for error in form.game.errors %}
+        <b style="color:red;"> {{ error }} </b> 
+        <br>
+        {% endfor %}
+    {% endif %}
+    <br>
+    {{ form.csrf_token }}
+    {{ form.submit }}
+</form>
+{% endif %}
+{% endblock %}

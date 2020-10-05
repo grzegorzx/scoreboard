@@ -6,6 +6,20 @@ Home
 
 {% block content %}
 
+{% if message %}
+    {{ message }}
+{% endif %}
+
 <h1>Recent sessions:</h1>
-Placeholder for scoreboard table.
+
+{% for score in score_results %}
+    <tr>
+      <td>{{ score['game_title'] }} | </td>
+      <td>For {{ score['winner'] }} | </td>
+      <td>{{ score['score'] }} points |</td>
+      <td>{{ score['timestamp'] }}</td>
+      <br>
+    </tr>
+    {% endfor %}
+
 {% endblock %}
