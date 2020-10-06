@@ -1,6 +1,4 @@
 __pycache__
 .vscode
 .pipfile.lock
-Procfile
 scoreboard.db
-runtime.txt
