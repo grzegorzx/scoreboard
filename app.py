@@ -9,7 +9,7 @@ from wtforms.ext.sqlalchemy.fields import QuerySelectField
 import datetime
 
 app = Flask(__name__)
-SECRET_KEY = os.urandom(32)
+SECRET_KEY = "adh29dhs55291n29d291j4u37"
 app.config['SECRET_KEY'] = SECRET_KEY
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///scoreboard.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
